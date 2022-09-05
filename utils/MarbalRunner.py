@@ -49,10 +49,12 @@ class MarbalRunner:
     def moveTo(self,pos):
         e_dis=999
         e_ori=360
+
         while e_dis>CONST.arena_dim*CONST.tol or e_ori>CONST.tol*360:
             v_desired=1 ## currently pass full power until at goal
             w_desired= #desired w to face to the target
             duty_cycle_l, duty_cycle_r = self.robot_controller.drive(v_desired,w_desired,self.w[0],self.w[1]) #contorl
+            
             ##################
             #check obstical
             ##################
@@ -74,6 +76,14 @@ class MarbalRunner:
             CONT.time_out-=2*CONST.dt
             if CONST.time_out<=0:
                 break
+    
+    def _computeHeading(self,pos):
+        x_diff = pos[0]-self.pos[0]
+        y_diff = pos[1]-self.pos[1]
+
+        theta = np.arctan2(x_diff,y_diff)-self.pos[2]
+        return (theta + np.pi) % (2 * np.pi) -np.pi #make the angle between -pi and pi / -180 and 180
+
             
     def _setDirL(self,dir:bool):
         assert type(dir)== bool
