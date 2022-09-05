@@ -48,11 +48,13 @@ class MarbalRunner:
             
     def moveTo(self,pos):
         e_dis=999
-        e_ori=360
+        e_ori=2*np.pi
 
-        while e_dis>CONST.arena_dim*CONST.tol or e_ori>CONST.tol*360:
-            v_desired=1 ## currently pass full power until at goal
-            w_desired= #desired w to face to the target
+        Kw=5 # angular velocity factor
+
+        while e_dis>CONST.arena_dim*CONST.tol or e_ori>CONST.tol*2*np.pi:
+            v_desired = 1 ## currently pass full power until at goal
+            w_desired = Kw*_computeHeading(pos) #desired w to face to the target
             duty_cycle_l, duty_cycle_r = self.robot_controller.drive(v_desired,w_desired,self.w[0],self.w[1]) #contorl
             
             ##################
@@ -60,14 +62,14 @@ class MarbalRunner:
             ##################
             
             #drive
-            self._pwmL=abs(duty_cycle_l)
-            self._pwmR = abs(duty_cycle_r)
+            self._pwmL.value = abs(duty_cycle_l)
+            self._pwmR.value = abs(duty_cycle_r)
             self._setDirL(duty_cycle_l>0)
             self._setDirR(duty_cycle_r>0)
             time.sleep(2*CONST.dt) #ensure at least one loc update between 2 iteration
             
             #check error (dis to target)
-            e_dis=sqrt((self.pos[0]-pos[0])**2+(self.pos[1]-pos[1])**2)
+            e_dis = _computeDistance(pos)
             if len(pos)<=3:
                 e_ori=0
             else:
@@ -84,10 +86,12 @@ class MarbalRunner:
         theta = np.arctan2(x_diff,y_diff)-self.pos[2]
         return (theta + np.pi) % (2 * np.pi) -np.pi #make the angle between -pi and pi / -180 and 180
 
+    def _computeDistance(self,pos)
+        return sqrt((self.pos[0]-pos[0])**2+(self.pos[1]-pos[1])**2)
             
     def _setDirL(self,dir:bool):
         assert type(dir)== bool
-        self.dirL2.value=dir
+        self.dirL2.value = dir
         self.dirL1 = not self.dirL2
     
     def _setDirR(self,dir:int):
