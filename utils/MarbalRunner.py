@@ -51,7 +51,36 @@ class MarbalRunner:
         self.pos[1] = self.pos[1] - CONST.dt*v*np.sin(self.pos[2])
         self.pos[2] = self.pos[2] + CONST.dt*_w #check the unit here, this is from michael's code, we need it to be true bearing
         #print("thread1: ",*pos)
-            
+
+    def rotate(self,ori):
+        e=100
+        while e>0.001*2*np.pi:
+            self._updateLoc()
+            v_desired = 1
+            w_desired = CONST.Kw*((ori-self.pos[2])) #desired w to face to the target
+            print("desired val",v_desired,w_desired)
+            duty_cycle_l, duty_cycle_r = self.robot_controller.drive(v_desired,w_desired,self.w[0],self.w[1]) #contorl
+            self._pwmL.value = abs(duty_cycle_l)
+            self._pwmR.value = abs(duty_cycle_r)
+            print("duty cycle",duty_cycle_l,duty_cycle_r)
+            self._setDirL(duty_cycle_l>0)
+            self._setDirR(duty_cycle_r>0)
+            print(*self.pos)
+                
+            #check error (dis to target)
+            e=abs(ori-self.pos[2])
+            print("errs:",e)
+                
+            CONST.time_out-=2*CONST.dt
+            if CONST.time_out<=0:
+                break
+        self._pwmL.value =0
+        self._pwmR.value =0
+        time.sleep(CONST.dt)
+        self._updateLoc()
+        print(*self.pos)
+
+
     def moveTo(self,pos):
         e_dis=999
         e_ori=2*np.pi
@@ -60,9 +89,10 @@ class MarbalRunner:
 
         while e_dis>CONST.arena_dim[0]*CONST.tol or e_ori>CONST.tol*2*np.pi:
             #print(id(self))
-            v_desired = -1*CONST.Kw*self._computeDistance(pos)  ## currently pass full power until at goal
+            self._updateLoc()
+            v_desired = -1* CONST.Kw*self._computeDistance(pos)  ## currently pass full power until at goal
             w_desired = CONST.Kw*self._computeHeading(pos) #desired w to face to the target
-            print(v_desired,w_desired)
+            print("desired val",v_desired,w_desired)
             duty_cycle_l, duty_cycle_r = self.robot_controller.drive(v_desired,w_desired,self.w[0],self.w[1]) #contorl
             #print(duty_cycle_l,type(duty_cycle_l))
             #print(duty_cycle_r,type(duty_cycle_r))
@@ -71,28 +101,36 @@ class MarbalRunner:
             #duty_cycle_l=duty_cycle_l.item()
             self._pwmL.value = abs(duty_cycle_l)
             self._pwmR.value = abs(duty_cycle_r)
+            print("duty cycle",duty_cycle_l,duty_cycle_r)
             self._setDirL(duty_cycle_l>0)
             self._setDirR(duty_cycle_r>0)
             
             #print("pwmL",self._pwmL.value,"pwmR",self._pwmR.value)
             #print("dirL: (",self._dirL1.value,self._dirL2.value,") dirR: (",self._dirR1.value,self._dirR2.value,")")
-            time.sleep(2*CONST.dt) #ensure at least one loc update between 2 iteration
-            self._updateLoc()
+            #time.sleep(CONST.dt) #ensure at least one loc update between 2 iteration
+            #self._updateLoc()
             print(*self.pos)
                 
             #check error (dis to target)
             e_dis = self._computeDistance(pos)
-            if len(pos)<=3:
+            if len(pos)<3:
                 e_ori=0
             else:
                 e_ori=abs(self.pos[2]-pos[2])
+            print("errs:",e_dis,e_ori)
                 
             CONST.time_out-=2*CONST.dt
+            #self._updateLoc()
             if CONST.time_out<=0:
                 break
+        self._pwmL.value =0
+        self._pwmR.value =0
+        self._updateLoc()
+        print(*self.pos)
     
     def _step2(self):
         target=(90,20)
+        flag=True
         while e_dis>CONST.arena_dim[0]*CONST.tol or e_ori>CONST.tol*2*np.pi:
             v_desired = 1 ## currently pass full power until at goal
             w_desired = CONST.Kw*self._computeHeading(pos) #desired w to face to the target
@@ -107,8 +145,9 @@ class MarbalRunner:
             self._setDirR(duty_cycle_r>0)
             time.sleep(2*CONST.dt) #ensure at least one loc update between 2 iteration
             
-            if self._sensor_right.distance>50:
+            if self._sensor_right.distance>50 and flag:
                 target=(90,max(self.pos[1]-20,20))
+                flag=False
             
             e_dis = self._computeDistance(pos)
             if len(pos)<=3:
@@ -119,7 +158,7 @@ class MarbalRunner:
             CONT.time_out-=2*CONST.dt
             if CONST.time_out<=0:
                 break
-        self.moveTo((self.pos[0],self.pos[1],np.pi))
+        self.rotate(np.pi)
         self.moveTo((30,self.pos[1],np.pi))
         self.moveTo((30,self.pos[1],np.pi/2))
         self.moveTo((30,60))
@@ -128,7 +167,7 @@ class MarbalRunner:
     def _computeHeading(self,pos):
         x_diff = pos[0]-self.pos[0]
         y_diff = pos[1]-self.pos[1]
-
+        #print("############",np.arctan2(y_diff,x_diff),x_diff,y_diff)
         theta = np.arctan2(y_diff,x_diff)-self.pos[2]
         temp=(theta + np.pi) % (2 * np.pi) -np.pi #make the angle between -pi and pi / -180 and 180
         return temp.item()

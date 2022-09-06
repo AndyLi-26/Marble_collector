@@ -8,4 +8,4 @@ class CONST:
     dt=0.1
     tol=0.1
     time_out=300
-    Kw=1
+    Kw=0.3
