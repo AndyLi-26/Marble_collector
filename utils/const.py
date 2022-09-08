@@ -9,3 +9,5 @@ class CONST:
     tol=0.005
     time_out=300
     Kw=5
+    left_offset = 5
+    front_offset = 22.5

@@ -22,10 +22,13 @@ class MarbalRunnerST:
         self._encoderR = gpiozero.RotaryEncoder(a=17, b=27,max_steps=100000)
 
         #set up the sensor pins    
-        self._sensor_back = gpiozero.DistanceSensor(echo=19,trigger=20, max_distance=1.7)
-        self._sensor_front = gpiozero.DistanceSensor(echo=11,trigger=16, max_distance=1.7)
-        self._sensor_right = gpiozero.DistanceSensor(echo=0,trigger=8, max_distance=1.7)
-        self._sensor_left = gpiozero.DistanceSensor(echo=26,trigger=1, max_distance=1.7)
+        # self._sensor_back = gpiozero.DistanceSensor(echo=19,trigger=20, max_distance=1.7)
+        # self._sensor_front = gpiozero.DistanceSensor(echo=11,trigger=16, max_distance=1.7)
+        # self._sensor_right = gpiozero.DistanceSensor(echo=0,trigger=8, max_distance=1.7)
+        # self._sensor_left = gpiozero.DistanceSensor(echo=26,trigger=1, max_distance=1.7)
+        self.sensorFront_Right = gpiozero.DistanceSensor(echo=19,trigger=16, max_distance=2,queue_len=15)
+        self.sensorFront_Left = gpiozero.DistanceSensor(echo=26,trigger=1, max_distance=2,queue_len=15)
+        self.sensorLeft = gpiozero.DistanceSensor(echo=11,trigger=20, max_distance=2,queue_len=15)
         
         #set up initial vals
         self.pos=Array("f",pos[:]) #(x,y,orientation) in (mm,mm,true bearing degress)
@@ -57,10 +60,84 @@ class MarbalRunnerST:
         self._encoderL.steps = 0
         self._encoderR.steps = 0
 
+    def calibrate(self, expected_ori): 
+        # diff_sensor = (self.sensorFront_Right.distance*100-self.sensorFront_Left.distance*100)
+        r_distance = self.sensorFront_Right.distance*100
+        l_distance = self.sensorFront_Left.distance*100
+        sensor_diff = r_distance - l_distance
+        print("DisFront_Right:",r_distance)
+        print("DisFront_Left:",l_distance)
+        print("Difference:",sensor_diff)
+        self._prevT = datetime.datetime.now()
+
+        while abs(sensor_diff) > 0.25:
+            if abs(sensor_diff)<0.25:
+                break
+            time.sleep(CONST.dt)
+            self._updateLoc()
+            v_desired = 0
+            w_desired = min(max(-0.5,1*(sensor_diff)),0.5) #desired w to face to the target
+            duty_cycle_l, duty_cycle_r = self.robot_controller.drive(v_desired,w_desired,self.w[0],self.w[1]) #contorl
+            self._pwmL.value = abs(duty_cycle_l)
+            self._pwmR.value = abs(duty_cycle_r)
+            self._setDirL(duty_cycle_l>0)
+            self._setDirR(duty_cycle_r>0)
+            print(duty_cycle_l)
+            #print(*self.pos)
+            time.sleep(0.1)
+            self._pwmL.value =0
+            self._pwmR.value =0
+            time.sleep(0.25)
+            #check error (dis to target)
+            r_distance = self.sensorFront_Right.distance*100
+            l_distance = self.sensorFront_Left.distance*100
+            sensor_diff = r_distance - l_distance
+            print("sensor_diff:",sensor_diff)
+                
+            CONST.time_out-=CONST.dt
+            if CONST.time_out<=0:
+                break
+        self._pwmL.value =0
+        self._pwmR.value =0
+        time.sleep(CONST.dt)
+        self._updateLoc()
+        #print(*self.pos)
+
+        # Set the new position
+        # CONST.left_offset
+        # CONST.front
+
+        time.sleep(1)
+
+        # self.pos[0] =  sensorFront_Left
+        print("Current Posision")
+        print(*self.pos)
+
+        front_measurement =  (r_distance+l_distance)/2 + CONST.front_offset
+        left_measurement = self.sensorLeft.distance*100 + CONST.left_offset
+        
+        if(expected_ori == 0 or expected_ori == 2*np.pi):
+            self.pos[0] = 120 - front_measurement
+            self.pos[1] = 120 - left_measurement
+        elif(expected_ori == np.pi or expected_ori == -np.pi):
+            self.pos[0] = front_measurement
+            self.pos[1] = left_measurement
+        elif(expected_ori == np.pi/2):
+            self.pos[0] = left_measurement
+            self.pos[1] = 120 - front_measurement
+        elif(expected_ori == -np.pi/2):
+            self.pos[0] = 120 - left_measurement
+            self.pos[1] = front_measurement
+            
+        # self.pos[2] = expected_ori
+
+        print("Updated position")
+        print(*self.pos)
+
     def rotate(self,ori):
         e=100
         self._prevT = datetime.datetime.now()
-        while e>0.001*2*np.pi:
+        while e>0.005*2*np.pi:
             time.sleep(CONST.dt)
             self._updateLoc()
             v_desired = 0
