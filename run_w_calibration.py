@@ -20,7 +20,7 @@ if __name__=="__main__":
         robot.rotate(np.pi/4)
         print("########################")
         time.sleep(2)
-        robot.moveTo((85,75)) 
+        robot.moveTo((80,75)) 
         time.sleep(3)
 
         # Goto waypoint two(Yellow)
@@ -29,7 +29,7 @@ if __name__=="__main__":
         robot.calibrate(-np.pi/2)
         time.sleep(2)
         print("########################")
-        robot.moveTo((robot.pos[0],45))    
+        robot.moveTo((robot.pos[0],30))    
         time.sleep(3)
 
         robot.rotate(3.14159)
@@ -37,7 +37,7 @@ if __name__=="__main__":
         robot.calibrate(np.pi)
         time.sleep(3)
         print("########################")
-        robot.moveTo((45,robot.pos[1]))    
+        robot.moveTo((30,robot.pos[1]))    
         time.sleep(3)
 
         robot.rotate(np.pi/2)

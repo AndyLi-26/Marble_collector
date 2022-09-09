@@ -65,9 +65,9 @@ class MarbalRunnerST:
         r_distance = self.sensorFront_Right.distance*100
         l_distance = self.sensorFront_Left.distance*100
         sensor_diff = r_distance - l_distance
-        print("DisFront_Right:",r_distance)
-        print("DisFront_Left:",l_distance)
-        print("Difference:",sensor_diff)
+        #print("DisFront_Right:",r_distance)
+        ##print("DisFront_Left:",l_distance)
+        #print("Difference:",sensor_diff)
         self._prevT = datetime.datetime.now()
 
         while abs(sensor_diff) > 0.25:
@@ -82,7 +82,7 @@ class MarbalRunnerST:
             self._pwmR.value = abs(duty_cycle_r)
             self._setDirL(duty_cycle_l>0)
             self._setDirR(duty_cycle_r>0)
-            print(duty_cycle_l)
+            #print(duty_cycle_l)
             #print(*self.pos)
             time.sleep(0.1)
             self._pwmL.value =0
@@ -91,8 +91,9 @@ class MarbalRunnerST:
             #check error (dis to target)
             r_distance = self.sensorFront_Right.distance*100
             l_distance = self.sensorFront_Left.distance*100
+
             sensor_diff = r_distance - l_distance
-            print("sensor_diff:",sensor_diff)
+            #print("sensor_diff:",sensor_diff)
                 
             CONST.time_out-=CONST.dt
             if CONST.time_out<=0:
@@ -139,6 +140,11 @@ class MarbalRunnerST:
         self._prevT = datetime.datetime.now()
         while e>0.005*2*np.pi:
             time.sleep(CONST.dt)
+            l_distance = self.sensorFront_Left.distance*100
+            r_distance = self.sensorFront_Left.distance*100
+            if (l_distance <20  or r_distance<20 ):
+                print("OBSTICAL")
+            
             self._updateLoc()
             v_desired = 0
             w_desired = min(max(-0.5,CONST.Kw*((ori-self.pos[2]))),0.5) #desired w to face to the target
@@ -152,7 +158,7 @@ class MarbalRunnerST:
                 
             #check error (dis to target)
             e=abs(ori-self.pos[2])
-            print("errs:",e)
+            # print("errs:",e)
                 
             CONST.time_out-=CONST.dt
             if CONST.time_out<=0:
@@ -193,14 +199,19 @@ class MarbalRunnerST:
             #time.sleep(CONST.dt) #ensure at least one loc update between 2 iteration
             #self._updateLoc()
             #print(*self.pos)
-                
+            
+            l_distance = self.sensorFront_Left.distance*100
+            r_distance = self.sensorFront_Left.distance*100
+            if (l_distance <20  or r_distance<20 ):
+                print("OBSTICAL")
+
             #check error (dis to target)
             e_dis = self._computeDistance(pos)
             if len(pos)<3:
                 e_ori=0
             else:
                 e_ori=abs(self.pos[2]-pos[2])
-            print("errs:",e_dis,e_ori)
+            #print("errs:",e_dis,e_ori)
                 
             CONST.time_out-=CONST.dt
             #self._updateLoc()
