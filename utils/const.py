@@ -11,3 +11,4 @@ class CONST:
     Kw=5
     left_offset = 5
     front_offset = 22.5
+    pi=3.1415926
