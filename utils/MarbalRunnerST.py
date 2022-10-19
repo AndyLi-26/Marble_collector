@@ -21,6 +21,14 @@ class MarbalRunnerST:
 
         self._encoderL = gpiozero.RotaryEncoder(a=20, b=16,max_steps=100000)
         self._encoderR = gpiozero.RotaryEncoder(a=19, b=26,max_steps=100000)
+        self._pwmR = gpiozero.PWMOutputDevice(pin=10,active_high=True,initial_value=0,frequency=100)
+
+        self._dirL1 = gpiozero.OutputDevice(pin=5);self._dirL2 = gpiozero.OutputDevice(pin=6)
+        self._dirR1 = gpiozero.OutputDevice(pin=25);self._dirR2 = gpiozero.OutputDevice(pin=9)
+        
+        self._encoderL = gpiozero.RotaryEncoder(a=3, b=4,max_steps=100000)
+        self._encoderR = gpiozero.RotaryEncoder(a=17, b=27,max_steps=100000)
+
         #set up the sensor pins    
         # self._sensor_back = gpiozero.DistanceSensor(echo=19,trigger=20, max_distance=1.7)
         # self._sensor_front = gpiozero.DistanceSensor(echo=11,trigger=16, max_distance=1.7)
@@ -30,12 +38,16 @@ class MarbalRunnerST:
         self._sensorLeft = gpiozero.DistanceSensor(echo=1,trigger=25, max_distance=2,queue_len=15)
         self._sensorRight = gpiozero.DistanceSensor(echo=11,trigger=9, max_distance=2,queue_len=15)
         self._sensorFront_Left = gpiozero.DistanceSensor(echo=7,trigger=18, max_distance=2,queue_len=15)
+        self.sensorFront_Right = gpiozero.DistanceSensor(echo=19,trigger=16, max_distance=2,queue_len=15)
+        self.sensorFront_Left = gpiozero.DistanceSensor(echo=26,trigger=1, max_distance=2,queue_len=15)
+        self.sensorLeft = gpiozero.DistanceSensor(echo=11,trigger=20, max_distance=2,queue_len=15)
         
         #set up initial vals
         self.pos=Array("f",pos[:]) #(x,y,orientation) in (mm,mm,true bearing degress)
         self.w=Array("f",w[:]) #[wl,wr]
         self.robot_controller=RobotController()
         self._prevT = datetime.datetime.now()
+        self._prevT = 0
         #print("id in init",id(self._pwmL))
 
 
@@ -58,6 +70,15 @@ class MarbalRunnerST:
         self.pos[1] = self.pos[1] + timeElapsed*v*np.sin(self.pos[2])
         self.pos[2] = self.pos[2] + timeElapsed*_w #check the unit here, this is from michael's code, we need it to be true bearing
         
+        wl=readL/CONST.shaft_pulse_per_rotation/timeElapsed*2*np.pi
+        wr=readR/CONST.shaft_pulse_per_rotation/timeElapsed*2*np.pi
+        self.w[0]=wl
+        self.w[1]=wr
+        v = (wl*CONST.wheel_r + wr*CONST.wheel_r)/2.0
+        _w = (wl*CONST.wheel_r - wr*CONST.wheel_r)/CONST.wheel_sep
+        self.pos[0] = self.pos[0] - timeElapsed*v*np.cos(self.pos[2])
+        self.pos[1] = self.pos[1] - timeElapsed*v*np.sin(self.pos[2])
+        self.pos[2] = self.pos[2] + timeElapsed*_w #check the unit here, this is from michael's code, we need it to be true bearing
         self.pos[2] = (self.pos[2] + np.pi) % (2 * np.pi) -np.pi 
         #print("thread1: ",*pos)
         self._prevT = datetime.datetime.now()
@@ -165,6 +186,18 @@ class MarbalRunnerST:
             #print("desired val",v_desired,w_desired)
             duty_cycle_l, duty_cycle_r = self.robot_controller.drive(v_desired,w_desired,self.w[0],self.w[1]) #contorl
             print("duty cycle: ",duty_cycle_l,duty_cycle_r)
+        while e>0.005*2*np.pi:
+            time.sleep(CONST.dt)
+            l_distance = self.sensorFront_Left.distance*100
+            r_distance = self.sensorFront_Left.distance*100
+            if (l_distance <20  or r_distance<20 ):
+                print("OBSTICAL")
+            
+            self._updateLoc()
+            v_desired = 0
+            w_desired = min(max(-0.5,CONST.Kw*((ori-self.pos[2]))),0.5) #desired w to face to the target
+            #print("desired val",v_desired,w_desired)
+            duty_cycle_l, duty_cycle_r = self.robot_controller.drive(v_desired,w_desired,self.w[0],self.w[1]) #contorl
             self._pwmL.value = abs(duty_cycle_l)
             self._pwmR.value = abs(duty_cycle_r)
             self._setDirL(duty_cycle_l>0)
@@ -180,6 +213,8 @@ class MarbalRunnerST:
                 break
         self._pwmL.off()
         self._pwmR.off()
+        self._pwmL.value =0
+        self._pwmR.value =0
         time.sleep(CONST.dt)
         self._updateLoc()
         #print(*self.pos)
@@ -280,6 +315,7 @@ class MarbalRunnerST:
                 return
 
 
+    
     def _step2(self):
         target=(90,20)
         flag=True
