@@ -39,12 +39,10 @@ class MarbalRunnerST:
         timeElapsed = (datetime.datetime.now() - self._prevT).total_seconds()
         wl=((readL/CONST.shaft_pulse_per_rotation_l)/timeElapsed)*2*np.pi
         wr=((readR/CONST.shaft_pulse_per_rotation_r)/timeElapsed)*2*np.pi
-        print('r: ',wl,',',wr)
         self.w[0]=wl
         self.w[1]=wr
         v = (wr*CONST.wheel_r + wl*CONST.wheel_r)/2.0
         _w = (wl*CONST.wheel_r - wr*CONST.wheel_r)/CONST.wheel_sep
-        print("_w",_w)
         self.pos[0] = self.pos[0] + timeElapsed*v*np.cos(self.pos[2])
         self.pos[1] = self.pos[1] + timeElapsed*v*np.sin(self.pos[2])
         self.pos[2] = self.pos[2] + timeElapsed*_w #check the unit here, this is from michael's code, we need it to be true bearing
@@ -93,7 +91,6 @@ class MarbalRunnerST:
             v_desired = 0.1
             w_desired = min(max(-1,CONST.Kw*((diff))),1) #desired w to face to the target
             #print(w_desired)
-            print(*self.pos)
             duty_cycle_l, duty_cycle_r = self.robot_controller.drive(v_desired,w_desired,self.w[0],self.w[1]) #contorl
             self._pwmL.value = abs(duty_cycle_l)
             self._pwmR.value = abs(duty_cycle_r)
@@ -105,7 +102,6 @@ class MarbalRunnerST:
             e=math.fmod(abs(ori-self.pos[2]),np.pi) #MAY CAUSE BUG
             CONST.time_out-=CONST.dt
             #print("dutycycle:\n",self._pwmL.value,self._pwmR.value)
-            print("e:    ",e)
         #self._pwmL.value=0.0
         #self._pwmR.value=0.0
         self._pwmL.off()
@@ -161,8 +157,6 @@ class MarbalRunnerST:
             fr=self._sensorFront_Right.distance*100
             l=self._sensorLeft.distance*100
             r=self._sensorRight.distance*100
-            print("fl:",fl,"fr:",fr,"l:",l,"r:",r)
-            print(*self.pos)
             distance_fl = (self._sensorFront_Left.distance*100)<20
             distance_fr = (self._sensorFront_Right.distance*100)<20
             distance_l =  (self._sensorLeft.distance*100)<10

@@ -13,6 +13,7 @@ cap = cv2.VideoCapture('/dev/video0',cv2.CAP_V4L)
 while True:
     ret,frame=cap.read()
     time.sleep(0.5)
-    print(frame.shape)
+    print(ret)
     #picam2.capture_file("test-{}.jpg".format(i))
-    cv2.imwrite("test.jpg",frame)
+    if ret:
+        cv2.imwrite("test.jpg",frame)

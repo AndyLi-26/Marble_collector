@@ -24,12 +24,12 @@ while True:
 
         rows = gray.shape[0]
         circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1, rows / 20,
-                                   param1=180, param2=30,
-                                   minRadius=10, maxRadius=50)
+                                   param1=180, param2=20,
+                                   minRadius=5, maxRadius=50)
 
         if circles is not None:
             circles = np.uint16(np.around(circles))
-            print(circles)
+            print(circles.shape[1])
             for i in circles[0, :]:
                 center = (i[0], i[1])
                 # circle center

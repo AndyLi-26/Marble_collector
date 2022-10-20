@@ -18,7 +18,6 @@ class RobotController:
     def drive(self,v_desired,w_desired,wl,wr):
         wl_desired = (v_desired + CONST.wheel_sep*w_desired/2)/CONST.wheel_r
         wr_desired = (v_desired - CONST.wheel_sep*w_desired/2)/CONST.wheel_r
-        print(wl_desired,',',wr_desired)
         duty_cycle_l,self.e_sum_l = self.p_control(wl_desired,wl,self.e_sum_l)
         duty_cycle_r,self.e_sum_r = self.p_control(wr_desired,wr,self.e_sum_r)
         return duty_cycle_l, duty_cycle_r

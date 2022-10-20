@@ -10,8 +10,10 @@ def rec(src):
     time.sleep(0.5)
     gray = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
     rows = gray.shape[0]
-    circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1, rows / 20,param1=180,param2=30,minRadius=10, maxRadius=50)
-    return len(circles) if circles else None
+    circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1, rows / 20,param1=180, param2=20,minRadius=5, maxRadius=50)
+    if circles is not None:
+        print('found: ',circles.shape[1])
+    return 0 if circles is None else circles.shape[1]
 
 if __name__=="__main__":
     t0=datetime.datetime.now()
@@ -23,7 +25,7 @@ if __name__=="__main__":
         
         new_oir=robot.pickWP()
         flag=robot.rotate(new_oir)
-        for _ in range(5):
+        for _ in range(3):
             ret,src = cap.read()
             if ret and rec(src)>3:
                 break

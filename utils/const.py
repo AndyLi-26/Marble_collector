@@ -11,4 +11,5 @@ class CONST:
     dt=0.1
     tol=0.1
     time_out=300
-    Kw=0.3
+    Kw=2.5
+    pi = 3.14
