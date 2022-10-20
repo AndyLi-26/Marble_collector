@@ -2,18 +2,8 @@ from picamera2 import Picamera2, Preview
 import time
 import cv2 as cv
 import numpy as np
-#picam2 = Picamera2()
-#camera_config = picam2.create_preview_configuration()
-#picam2.configure(camera_config)
-#picam2.start_preview(Preview.QTGL)
-#picam2.start()
-
 cap = cv.VideoCapture('/dev/video0',cv.CAP_V4L)
-#cap.set(cv2.CAP_PROP_FRAME_WIDTH,2560)
-#cap.set(cv2.CAP_PROP_FRAME_HEIGHT,1440)
-
-
-while True:
+def recgoise():
         ret,src=cap.read()
         time.sleep(0.5)
         
@@ -24,7 +14,7 @@ while True:
 
         rows = gray.shape[0]
         circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1, rows / 20,
-                                   param1=180, param2=30,
+                                   param1=180                                                                                                                                                                                                               , param2=30,
                                    minRadius=10, maxRadius=50)
 
         if circles is not None:
