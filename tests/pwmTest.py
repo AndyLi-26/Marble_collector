@@ -9,24 +9,24 @@ import time
 class testPWM:
     def __init__(self):
         self.pwmL = gpiozero.PWMOutputDevice(pin=12,active_high=True,initial_value=0,frequency=100)
-        self.pwmR = gpiozero.PWMOutputDevice(pin=13,active_high=True,initial_value=0,frequency=100)
+        self.pwmR = gpiozero.PWMOutputDevice(pin=10,active_high=True,initial_value=0,frequency=100)
 
-        self.dirL1 = gpiozero.OutputDevice(pin=24);self.dirL2 = gpiozero.OutputDevice(pin=23)
-        self.dirR1 = gpiozero.OutputDevice(pin=5);self.dirR2 = gpiozero.OutputDevice(pin=6)
+        self.dirL1 = gpiozero.OutputDevice(pin=5);self.dirL2 = gpiozero.OutputDevice(pin=6)
+        self.dirR1 = gpiozero.OutputDevice(pin=25);self.dirR2 = gpiozero.OutputDevice(pin=9)
 
         self.dirL1.value=0;self.dirL2.value=1
         self.dirR1.value=0;self.dirR2.value=1
-        self.encoderL = gpiozero.RotaryEncoder(a=20, b=16,max_steps=100000)
-        self.encoderR = gpiozero.RotaryEncoder(a=19, b=26,max_steps=100000)
+        self.encoderL = gpiozero.RotaryEncoder(a=3, b=4,max_steps=100000)
+        self.encoderR = gpiozero.RotaryEncoder(a=17, b=27,max_steps=100000)
 
     def run(self):
         for _ in range(1):
-            for i in range(1):
-                self.pwmL.value = 0.5
-                self.pwmR.value = 0.45
+            for i in range(10):
+                self.pwmL.value = 1
+                self.pwmR.value = 1
                 self.encoderL.steps = 0
                 self.encoderR.steps = 0
-                time.sleep(0.5)
+                time.sleep(1)
                 print("encoderL:",self.encoderL.steps)
                 print("encoderR:",self.encoderR.steps)
                 print('Duty cycleL:',self.pwmL.value,'Duty cycleR:',self.pwmR.value)
