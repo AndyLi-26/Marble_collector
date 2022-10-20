@@ -1,4 +1,5 @@
 from utils.MarbalRunnerST import MarbalRunnerST
+from utils.camera_test2 import rec
 from utils.const import CONST
 import numpy as np
 import time,sys,datetime
@@ -11,10 +12,12 @@ if __name__=="__main__":
         #time.sleep(0.2)
         #robot.testSensor()
         
-        flag=-1
-        while flag==-1:
+        new_oir=robot.pickWP()
+        flag=robot.rotate(new_oir)
+        for _ in range(5):
+            if rec()>3:
+                break
             new_oir=robot.pickWP()
             flag=robot.rotate(new_oir)
-            print(flag)
         robot.moveUntilHit()
         
