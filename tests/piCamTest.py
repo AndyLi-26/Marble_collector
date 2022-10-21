@@ -16,4 +16,4 @@ while True:
     print(ret)
     #picam2.capture_file("test-{}.jpg".format(i))
     if ret:
-        cv2.imwrite("test.jpg",frame)
+        cv2.imwrite("camera.jpg",frame)

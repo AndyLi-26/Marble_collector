@@ -39,4 +39,4 @@ while True:
                 cv.circle(src, center, radius, (255, 0, 255), 3)
 
         # cv.imshow("detected circles", src)
-        cv.imwrite("circles.jpg",src)
+        cv.imwrite("camera.jpg",src)
