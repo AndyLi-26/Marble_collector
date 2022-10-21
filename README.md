@@ -7,6 +7,7 @@ This repository contains all the essential code for a robot which is driven by a
 * Parallel programming
 * real time camera with ssh connection (require VScode)
 ---
+
 run.py will move randomly in a 120cm x 120cm area if there is no marble in the area. If there is marble, it will only move to the marbles
 parallel_version.py will run some important components in parallel, such as updata location function, marble recgonition (CV) etc...
 ---
