@@ -1,5 +1,4 @@
 # Marble_collector
----
 This repository contains all the essential code for a robot which is driven by a raspberry pi, including:
 * Camera to recgnize circular object, such as marbles
 * Differential drive controller (PID controller for 2 PWM controlled motor)
